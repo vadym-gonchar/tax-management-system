@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      lang="en">
+
+<head>
+    <title>Access Denied</title>
+</head>
+
+<body>
+
+<h2 th:text="#{accessDenied.label}"></h2>
+
+<hr>
+
+<a th:href="@{/login}" th:text="#{accessDenied.back}"></a>
+
+</body>
+
+</html>

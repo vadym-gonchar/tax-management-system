@@ -1,0 +1,53 @@
+<!DOCTYPE HTML>
+<html
+        xmlns:th="http://www.thymeleaf.org"
+        xmlns:sec="http://www.thymeleaf.org/extras/spring-security"
+        lang="en">
+<body>
+
+<nav th:fragment="topBar" class="navbar navbar-expand-lg navbar-dark bg-dark static-top">
+
+    <div class="container">
+        <a class="navbar-brand" href="/" th:text="#{navigation.info}"></a>
+        <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarResponsive"
+                aria-controls="navbarResponsive"
+                aria-expanded="false" aria-label="Toggle navigation">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarResponsive">
+            <ul class="navbar-nav ml-auto">
+
+                <li class="nav-item dropdown active ml-5">
+                    <a class="nav-link dropdown-toggle" href="#" id="navbarDropdownMenuLink" role="button"
+                       data-toggle="dropdown" aria-haspopup="true" aria-expanded="false"
+                       th:text="${#strings.toUpperCase(#locale)}">
+                    </a>
+                    <div class="dropdown-menu" aria-labelledby="navbarDropdownMenuLink">
+                        <a class="dropdown-item" th:href="@{?lang=en}" th:text="#{navigation.eng}"></a>
+                        <a class="dropdown-item" th:href="@{?lang=ua}" th:text="#{navigation.ua}"></a>
+                    </div>
+                </li>
+
+            </ul>
+        </div>
+    </div>
+
+    <div sec:authorize="isAuthenticated()" class="nav-item active mr-5">
+        <span class="text-white align-middle"
+              th:text="#{navigation.loggedAs} + ' ' + ${session.user.firstName} + ' ' + ${session.user.lastName}">
+        </span>
+    </div>
+    <div sec:authorize="isAuthenticated()">
+        <form th:action="@{/logout}" method="POST">
+            <button type="submit" class="btn btn-secondary btn-md " th:text="#{navigation.logout}"></button>
+        </form>
+    </div>
+
+</nav>
+
+<script th:src="@{/webjars/jquery/jquery.min.js}"></script>
+<script th:src="@{/webjars/popper.js/umd/popper.min.js}"></script>
+<script th:src="@{/webjars/bootstrap/js/bootstrap.min.js}"></script>
+
+</body>
+</html>

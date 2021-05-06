@@ -1,0 +1,163 @@
+<!DOCTYPE HTML>
+<html lang="en"
+      xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <title>Create Report</title>
+
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.2.1/css/bootstrap.min.css"
+          integrity="sha384-GJzZqFGwb1QTTN6wy59ffF1BuGJpLSa9DkKMp0DgiMDm4iYMj70gZWKYbI706tWS" crossorigin="anonymous">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-datepicker/1.7.1/css/bootstrap-datepicker.min.css"
+          rel="stylesheet"/>
+    <link href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css" rel="stylesheet"
+          integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
+    <style type="text/css">
+        .datepicker td, .datepicker th {
+            width: 1.5em;
+            height: 1.5em;
+        }
+    </style>
+</head>
+
+<body>
+<div class="container">
+
+    <div th:if="${reportNotBelong}" class="alert alert-success col-xs-offset-1 col-xs-10">
+        <span th:text="#{reportForm.reportNotBelong}"></span>
+    </div>
+
+    <p class="h4 mt-4" th:object="${report}"
+       th:text="#{reportForm.taxReport} + ' ' + #{${report.user.type.name}}">
+    </p>
+
+    <p class="h5 mb-4" th:object="${report}"
+       th:text="#{reportForm.preparedBy} + ' ' + ${report.user.firstName} + ' ' + ${report.user.lastName}">
+    </p>
+
+    <form th:with="isUser = ${#authorization.expression('hasRole(''ROLE_USER'')')}, adminUrl = @{/admin/save}, userUrl = @{/save}"
+          th:action="${isUser} ? ${userUrl} : ${adminUrl}" th:object="${report}" method="POST"
+          class="form-horizontal mt-5">
+
+        <input type="hidden" th:field="*{id}"/>
+
+        <h6 sec:authorize="hasRole('ROLE_USER')" th:if="${report.id == null || reportStatusPending || reportStatusRejected}"
+            th:text="#{reportForm.reportDateLabel}" class="mb-2"></h6>
+        <!-- Date picker -->
+        <div style="margin-bottom: 15px; max-width:450px" class="input-group">
+            <span class="input-group-addon"><i class="glyphicon glyphicon-user"></i></span>
+
+            <input data-date-format="dd/mm/yyyy" id="datepicker" type="text" class="form-control"
+                   th:value="${#dates.format(report.reportDate, 'dd/MM/yyyy')}"
+                   th:unless="${readOnly}"
+                   th:field="*{reportDate}"
+                   th:placeholder="#{reportForm.reportDate}"
+                   th:errorclass="fieldError"/>
+
+            <span th:if="${readOnly}">
+                <b th:text="#{reportForm.statementDate}"></b>
+                <span th:text="${#dates.format(report.reportDate, 'dd/MM/yyyy')}"></span>
+            </span>
+
+            <input type="hidden"
+                   th:if="${readOnly}"
+                   th:field="*{reportDate}"/>
+        </div>
+        <div th:if="${#fields.hasErrors('reportDate')}" style="margin-bottom: 25px" class="text-danger">
+            <div><p th:each="err : ${#fields.errors('reportDate')}" th:text="${err}"></p></div>
+        </div>
+
+        <h6 sec:authorize="hasRole('ROLE_USER')" th:if="${report.id == null || reportStatusPending || reportStatusRejected}"
+            th:text="#{reportForm.rateLabel}" class="mt-2"></h6>
+        <!-- Add Rate -->
+        <div style="margin-bottom: 15px; max-width:450px" class="input-group">
+            <span class="input-group-addon"><i class="glyphicon glyphicon-user"></i></span>
+            <input type="text" oninput="this.value = this.value.replace(/[^0-9.]/g, '').replace(/(\..*?)\..*/g, '$1');"
+                   class="form-control"
+                   th:unless="${readOnly}"
+                   th:field="*{rate}"
+                   th:placeholder="#{reportForm.rate}"
+                   th:errorclass="fieldError"/>
+
+            <span th:if="${readOnly}">
+                <b th:text="#{reportForm.totalRate} + ' ' + #{reportForm.currency}"></b>
+                <span th:text="${report.rate}"></span>
+            </span>
+
+            <input type="hidden" th:if="${readOnly}" th:field="*{rate}"/>
+        </div>
+        <div th:if="${#fields.hasErrors('rate')}" style="margin-bottom: 25px" class="text-danger">
+            <div><p th:each="err : ${#fields.errors('rate')}" th:text="${err}"></p></div>
+        </div>
+
+        <p th:if="${readOnly}">
+            <b th:text="#{reportForm.userType}"></b>
+            <span th:text="#{${report.user.type.name}}"></span>
+        </p>
+        <p th:if="${readOnly}">
+            <b th:text="#{reportForm.email}"></b>
+            <span th:text="${report.user.email}"></span>
+        </p>
+
+        <div sec:authorize="hasRole('ROLE_ADMIN')" th:if="${reportStatusPending}" class="h6 mt-5">
+            <div class="font-italic">
+                <p th:text="#{reportForm.label}"></p>
+            </div>
+            <div style="color:mediumseagreen">
+                <input checked type="radio" name="status" th:value="${approvedStatus.id}"
+                       th:text=" ' ' + #{reportForm.approve}"/>
+            </div>
+            <br>
+            <div style="color:orangered">
+                <input type="radio" name="status" th:value="${rejectedStatus.id}"
+                       th:text=" ' ' + #{reportForm.reject}"/>
+            </div>
+        </div>
+
+        <p sec:authorize="hasRole('ROLE_ADMIN')" class="h6 mt-5 font-italic" th:text="#{reportForm.inspComnt}"></p>
+        <p sec:authorize="hasRole('ROLE_USER')" class="h6 mt-5 font-italic" th:text="#{reportForm.userComnt}"></p>
+
+        <span sec:authorize="hasRole('ROLE_USER')">
+            <!--<span th:text="${report.comment}"></span>-->
+
+            <textarea rows="5" cols="53" th:field="*{comment}" readonly></textarea>
+
+            <!-- <textarea rows="5" cols="53" th:field="*{comment}"
+                       th:disabled="${reportStatusPending || reportStatusRejected || reportStatusApproved}"></textarea>-->
+        </span>
+        <span sec:authorize="hasRole('ROLE_ADMIN')">
+            <textarea rows="5" cols="53" th:field="*{comment}"
+                      th:disabled="${reportStatusApproved || reportStatusRejected}"></textarea>
+        </span>
+        <br/>
+        <button sec:authorize="hasRole('ROLE_ADMIN')" th:if="${report.id == null || reportStatusPending}"
+                type="submit" class="btn btn-info col-2 mt-3" th:text="#{reportForm.submitReportButton}"></button>
+
+        <button sec:authorize="hasRole('ROLE_USER')"
+                th:if="${report.id == null || reportStatusPending || reportStatusRejected}"
+                type="submit" class="btn btn-info col-2 mt-3" th:text="#{reportForm.submitReportButton}"></button>
+    </form>
+
+    <br/>
+    <a th:href="@{/}" th:text="#{reportForm.back}"></a>
+</div>
+
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-datepicker/1.7.1/js/bootstrap-datepicker.min.js"></script>
+<script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js"
+        integrity="sha384-JZR6Spejh4U02d8jOt6vLEHfe/JQGiRRSQQxSfFWpi1MquVdAyjUar5+76PVCmYl"
+        crossorigin="anonymous"></script>
+
+<script type="text/javascript">
+    $('#datepicker').datepicker({
+        weekStart: 1,
+        daysOfWeekHighlighted: "6,0",
+        autoclose: true,
+        todayHighlight: true,
+    });
+</script>
+
+</body>
+</html>
