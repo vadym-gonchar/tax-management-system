@@ -34,7 +34,7 @@
 
     <div sec:authorize="isAuthenticated()" class="nav-item active mr-5">
         <span class="text-white align-middle"
-              th:text="#{navigation.loggedAs} + ' ' + ${session.user.firstName} + ' ' + ${session.user.lastName}">
+              th:text="#{navigation.loggedAs} + ' ' + ${session.user?.firstName} + ' ' + ${session.user?.lastName}">
         </span>
     </div>
     <div sec:authorize="isAuthenticated()">

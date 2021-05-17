@@ -1,6 +1,9 @@
 package gov.taxation.controller;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import gov.taxation.dto.UploadedReport;
 import gov.taxation.entity.Report;
+import gov.taxation.entity.ReportStatus;
 import gov.taxation.entity.User;
 import gov.taxation.enumerated.ReportStatusEnum;
 import gov.taxation.enumerated.RoleEnum;
@@ -8,19 +11,18 @@ import gov.taxation.service.ReportService;
 import gov.taxation.service.ReportStatusService;
 import gov.taxation.service.UserTypeService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.MediaType;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.ModelAttribute;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import javax.servlet.http.HttpSession;
 import javax.validation.Valid;
+import java.io.IOException;
 import java.util.Optional;
-import java.util.logging.Logger;
 
 @Controller
 public class ReportController {
@@ -34,12 +36,13 @@ public class ReportController {
     @Autowired
     private UserTypeService userTypeService;
 
-    private final Logger logger = Logger.getLogger(getClass().getName());
+    @Autowired
+    private ObjectMapper mapper;
 
     @GetMapping("/showFormForAdd")
-    public String createReportForm(Model model, HttpSession session) {
+    public String createReportForm(Report report, Model model, HttpSession session) {
 
-        Report report = new Report();
+        report = (report == null) ? new Report() : report;
 
         User user = (User) session.getAttribute("user");
 
@@ -57,27 +60,24 @@ public class ReportController {
                                  RedirectAttributes redirectAttributes) {
 
         Optional<Report> reportOptional = reportService.findReportById(reportId);
-
+//address flash error message
         if (!reportOptional.isPresent()) {
             redirectAttributes.addFlashAttribute("reportNotFound", "This report has not been found");
-            return this.createReportForm(model, session);
+            return this.createReportForm(null, model, session);
         }
 
         Report report = reportOptional.get();
 
         User user = (User) session.getAttribute("user");
-
+//address flash error message
         if (user.getRole().getName().equals(RoleEnum.ROLE_USER.name()) && !this.isReportBelongToUser(user, report)) {
             redirectAttributes.addFlashAttribute("reportNotBelong", "This report is not the user's report");
-            return this.createReportForm(model, session);
+            return this.createReportForm(null, model, session);
         }
 
-        model.addAttribute("report", report);
+        this.fillModel(report, model);
         model.addAttribute("readOnly",
                 (report.getStatus().getName().equals(ReportStatusEnum.APPROVED.getName()) || user.getRole().getName().equals(RoleEnum.ROLE_ADMIN.name())));
-        model.addAttribute("reportStatusPending", report.getStatus().getName().equals(ReportStatusEnum.PENDING.getName()));
-        model.addAttribute("reportStatusRejected", report.getStatus().getName().equals(ReportStatusEnum.REJECTED.getName()));
-        model.addAttribute("reportStatusApproved", report.getStatus().getName().equals(ReportStatusEnum.APPROVED.getName()));
         model.addAttribute("userTypes", userTypeService.findAll());
 
         model.addAttribute("approvedStatus", this.reportStatusService.getStatus(ReportStatusEnum.APPROVED));
@@ -96,30 +96,28 @@ public class ReportController {
         User user = (User) session.getAttribute("user");
 
         report.setUser(user);
-
-        if (bindingResult.hasErrors()) {
-            logger.warning("Create or update form error");
-            return "report-form";
-        }
+        report.setStatus(this.reportStatusService.getStatus(ReportStatusEnum.PENDING));
 
         if (report.getId() != null) {
 
             Optional<Report> reportOptional = reportService.findReportById(report.getId());
-
+//address flash error message
             if (!reportOptional.isPresent()) {
-                redirectAttributes.addFlashAttribute("reportNotFound", "This report has not been found");
-                return this.createReportForm(model, session);
+                redirectAttributes.addFlashAttribute("reportNotFound", "error.reportNotFound");
+                return this.createReportForm(null, model, session);
             }
 
             Report existingReport = reportOptional.get();
 
+            this.fillModel(report, model);
+//address flash error message
             if (!this.isReportBelongToUser(user, existingReport)) {
-                redirectAttributes.addFlashAttribute("reportNotBelong", "This report is not the user's report");
-                return this.createReportForm(model, session);
+                redirectAttributes.addFlashAttribute("reportNotBelong", "reportForm.reportNotBelong");
+                return this.createReportForm(null, model, session);
             }
-
+//address flash error message
             if (this.isReportApproved(existingReport)) {
-                redirectAttributes.addFlashAttribute("reportIsApproved", "Report has been successfully approved");
+                redirectAttributes.addFlashAttribute("reportIsApproved", "success.reportIsApproved");
                 return this.viewReportForm(report.getId(), model, session, redirectAttributes);
             }
 
@@ -127,29 +125,72 @@ public class ReportController {
 
         }
 
-        report.setStatus(this.reportStatusService.getStatus(ReportStatusEnum.PENDING));
+        if (bindingResult.hasErrors()) {
+            return "report-form";
+        }
+
+        if (report.getId() == null) {
+            redirectAttributes.addAttribute("page", 0);
+            redirectAttributes.addAttribute("sort", "createdAt,desc");
+        }
 
         this.reportService.save(report);
 
         return "redirect:/";
     }
 
+    @PostMapping("/report/upload")
+    public String reportUpload(@RequestParam("file") MultipartFile file,
+                               Model model,
+                               HttpSession session,
+                               RedirectAttributes redirectAttributes) throws IOException {
+
+        if (file.isEmpty()) {
+            redirectAttributes.addFlashAttribute("emptyFileError", "error.emptyFileError");
+            return "redirect:/";
+        }
+
+        if (MediaType.APPLICATION_JSON_VALUE.equals(file.getContentType())) {
+
+            UploadedReport uploadedReport = this.mapper.readValue(file.getBytes(), UploadedReport.class);
+            Report report = new Report();
+            report.setReportDate(uploadedReport.getReportDate());
+            report.setRate(uploadedReport.getRate());
+
+            return this.createReportForm(report, model, session);
+
+        }else {
+            redirectAttributes.addFlashAttribute("fileFormatError", "error.fileFormatError");
+            return "redirect:/";
+        }
+    }
+
     @PostMapping("/admin/save")
-    public String changeReportStatus(@ModelAttribute("report") @Valid Report report,
+    public String changeReportStatus(@Valid @ModelAttribute("report") Report report,
                                      Model model,
-                                     HttpSession session, RedirectAttributes redirectAttributes) {
+                                     HttpSession session,
+                                     RedirectAttributes redirectAttributes) {
 
         Optional<Report> reportOptional = reportService.findReportById(report.getId());
-
+//address flash error message
         if (!reportOptional.isPresent()) {
-            redirectAttributes.addFlashAttribute("reportNotFound", "This report has not been found");
-            return this.createReportForm(model, session);
+            redirectAttributes.addFlashAttribute("reportNotFound", "error.reportNotFound");
+            return this.createReportForm(null, model, session);
         }
 
         Report existingReport = reportOptional.get();
-
+//address flash error message
         if (this.isReportApproved(existingReport)) {
-            redirectAttributes.addFlashAttribute("reportIsApproved", "Report has been successfully approved");
+            redirectAttributes.addFlashAttribute("reportIsApproved", "success.reportIsApproved");
+            return this.viewReportForm(report.getId(), model, session, redirectAttributes);
+        }
+
+        final ReportStatus adminStatus = report.getStatus();
+
+        Optional<ReportStatus> optionalReportStatus = this.reportStatusService.findById(adminStatus);
+
+        if (!optionalReportStatus.isPresent()) {
+            model.addAttribute("statusFormError", "reportForm.status.incorrect");
             return this.viewReportForm(report.getId(), model, session, redirectAttributes);
         }
 
@@ -167,5 +208,12 @@ public class ReportController {
 
     private boolean isReportBelongToUser(User user, Report report) {
         return user.getId().equals(report.getUser().getId());
+    }
+
+    private void fillModel(final Report report, final Model model) {
+        model.addAttribute("report", report);
+        model.addAttribute("reportStatusPending", report.getStatus().getName().equals(ReportStatusEnum.PENDING.getName()));
+        model.addAttribute("reportStatusRejected", report.getStatus().getName().equals(ReportStatusEnum.REJECTED.getName()));
+        model.addAttribute("reportStatusApproved", report.getStatus().getName().equals(ReportStatusEnum.APPROVED.getName()));
     }
 }

@@ -7,6 +7,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.Optional;
 
 @Service
 public class ReportStatusService {
@@ -20,5 +21,14 @@ public class ReportStatusService {
 
     public ReportStatus getStatus(ReportStatusEnum reportStatusEnum) {
         return this.reportStatusRepository.findByName(reportStatusEnum.getName());
+    }
+
+    public Optional<ReportStatus> findById(final ReportStatus reportStatus) {
+
+        if (reportStatus != null) {
+            return this.reportStatusRepository.findById(reportStatus.getId());
+        }
+
+        return Optional.empty();
     }
 }

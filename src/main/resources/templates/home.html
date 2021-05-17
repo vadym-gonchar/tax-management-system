@@ -29,18 +29,11 @@
             min-width: 200px;
         }
 
-        .Row {
-            display: table;
-            width: 100%; /*Optional*/
-            table-layout: fixed; /*Optional*/
-            border-spacing: 0px; /*Optional*/
+        input[type="search"]::-webkit-search-cancel-button {
+            -webkit-appearance: searchfield-cancel-button;
         }
-        .Column {
 
-            position: center;
-        }
     </style>
-
 </head>
 
 <body>
@@ -53,73 +46,111 @@
     <br>
 
     <div sec:authorize="hasRole('ROLE_USER')">
-        <div style="float: left;">
-                <h6 th:text="#{home.createButtonLabel}"></h6>
-                <a th:href="@{/showFormForAdd}" class="btn custom-btn btn-primary btn-md mr-5"
-                   th:text="#{home.createButton}"></a>
+
+        <div th:if="${fileFormatError}" class="alert alert-danger col-xs-offset-1 col-xs-10">
+            <span th:text="#{error.fileFormatError}"></span>
         </div>
-        <div style="float: left;">
+
+        <div th:if="${emptyFileError}" class="alert alert-danger col-xs-offset-1 col-xs-10">
+            <span th:text="#{error.emptyFileError}"></span>
+        </div>
+
+        <div th:if="${reportNotFound}" class="alert alert-danger col-xs-offset-1 col-xs-10">
+            <span th:text="#{error.reportNotFound}"></span>
+        </div>
+
+
+
+        <div class="btn-toolbar justify-content-between">
+            <!--Create Report Button-->
+            <div>
+                <h6 th:text="#{home.createButtonLabel}"></h6>
+                <a class="btn custom-btn btn-primary" th:href="@{/showFormForAdd}" th:text="#{home.createButton}"></a>
+            </div>
+            <!--Upload File-->
+            <form th:action="@{/report/upload}" method="POST" enctype="multipart/form-data">
                 <h6 th:text="#{home.uploadButtonLabel}"></h6>
                 <div class="input-group mb-3">
                     <div class="input-group-prepend">
-                        <button class="btn btn-primary" type="button" th:text="#{home.uploadButton}"></button>
+                        <button class="btn btn-primary" type="submit" th:text="#{home.uploadButton}"></button>
                     </div>
                     <div class="custom-file">
-                        <input type="file" class="custom-file-input" id="inputFile">
-                        <label class="custom-file-label" for="inputFile" th:text="#{home.chooseFile}"></label>
+                        <input type="file" class="custom-file-input" id="inputFile" name="file">
+                        <label class="custom-file-label" for="inputFile" style="color:lightgray"
+                               th:text="#{home.chooseFile}"></label>
                     </div>
                 </div>
-        </div>
-        <div style="float: right;">
-
-                <h6 th:text="#{home.dropdownLabel}"></h6>
-                <!-- Dropdown -->
-                <select class="form-control selectpicker ">
-                    <option value="" selected disabled th:text="#{home.statusLabel}"></option>
-                    <option th:each="status : ${statuses}"
-                            th:value="${status.id}"
-                            th:text="#{${status.name}}"></option>
-                </select>
-        </div>
-    </div>
-
-    <div sec:authorize="hasRole('ROLE_ADMIN')">
-        <div style="float: left;">
-                <h6 th:text="#{home.searchLabel}"></h6>
-                <form th:action="@{/users/search}" class="form-inline">
-                    <input class="form-control mr-sm-3 mb-3 " type="search" name="userName"
-                           th:placeholder="#{home.findBy}"/>
-                    <button class="btn btn-success mb-3" type="submit" th:text="#{home.search}"></button>
-                </form>
-        </div>
-        <div style="float: right;">
-                <h6  th:text="#{home.reportTypeLabel}"></h6>
-                <div class="input-group" >
-                    <select class="form-control selectpicker ">
-                        <option value="" selected disabled th:text="#{home.reportType}"></option>
-                        <option th:each="type : ${userTypes}"
-                                th:value="${type.id}"
-                                th:text="#{${type.name}}"></option>
+            </form>
+            <!--Dropdown-->
+            <form th:action="@{/}" th:object="${reportSearchForm}" method="POST">
+                <div>
+                    <h6 th:text="#{home.dropdownLabel}"></h6>
+                    <select class="form-control selectpicker" th:field="*{status}"
+                            onchange="this.form.submit(); return false;">
+                        <option value="" th:text="#{home.statusLabel}"></option>
+                        <option th:each="status : ${statuses}"
+                                th:value="${status.id}"
+                                th:text="#{${status.name}}"></option>
                     </select>
                 </div>
+            </form>
         </div>
     </div>
+
+    <form sec:authorize="hasRole('ROLE_ADMIN')" th:action="@{/}" th:object="${reportSearchForm}" method="POST">
+        <div class="row">
+        <div class="col-xs-6 col-md-4">
+            <h6 th:text="#{home.searchLabel}"></h6>
+            <div class="input-group">
+                <input class="form-control  mb-3 " type="search" th:field="*{name}" th:placeholder="#{home.findBy}"
+                       onchange="this.form.submit(); return false;"/>
+                <input type="hidden" value="${sort}"/>
+                <div class="input-group-btn">
+                <button class="btn btn-success mb-3" type="submit" th:text="#{home.search}"></button>
+                </div>
+            </div>
+        </div>
+        <div >
+            <h6 th:text="#{home.reportTypeLabel}" class="ml-5"></h6>
+            <div class="input-group">
+
+                <select th:field="*{type}" class="form-control selectpicker ml-5"
+                        onchange="this.form.submit(); return false;">
+                    <option value="" th:text="#{home.all}"></option>
+                    <option th:each="type : ${userTypes}"
+                            th:value="${type.id}"
+                            th:text="#{${type.name}}"></option>
+                </select>
+            </div>
+        </div>
+        </div>
+    </form>
 
     <table class="table table-bordered table-striped ">
         <thead class="thead-dark">
         <tr>
             <th sec:authorize="hasRole('ROLE_USER')" th:text="#{home.reports}"></th>
             <th sec:authorize="hasRole('ROLE_ADMIN')" th:text="#{home.viewUserReports}"></th>
-            <th>
-                <a th:href="@{/(page=${pageable.pageNumber},sort=reportDate)}" th:text="#{home.reportDate}"></a>
-            </th>
             <th sec:authorize="hasRole('ROLE_ADMIN')" th:text="#{home.reportType}"></th>
             <th>
-                <a th:href="@{/(page=${pageable.pageNumber},sort=createdAt)}" th:text="#{home.dateSubmitted}"></a>
+                <a th:with="rdSort = ${sort == 'reportDate,desc' ? 'reportDate,asc' : 'reportDate,desc'}"
+                   th:href="@{/(page=${pageable.pageNumber},sort=${rdSort})}" th:text="#{home.reportDate}"></a>
             </th>
             <th>
-                <a th:href="@{/(page=${pageable.pageNumber},sort=status)}" th:text="#{home.status}"></a>
+                <a th:with="createdSort = ${sort == 'createdAt,desc' ? 'createdAt,asc' : 'createdAt,desc'}"
+                   th:href="@{/(page=${pageable.pageNumber},sort=${createdSort})}" th:text="#{home.dateSubmitted}"></a>
             </th>
+
+            <th>
+                <a th:with="modifiedSort = ${sort == 'lastModified,desc' ? 'lastModified,asc' : 'lastModified,desc'}"
+                   th:href="@{/(page=${pageable.pageNumber},sort=${modifiedSort})}" th:text="#{home.lastModified}"></a>
+            </th>
+
+            <th>
+                <a th:with="statusSort = ${sort == 'status.name,desc' ? 'status.name,asc' : 'status.name,desc'}"
+                   th:href="@{/(page=${pageable.pageNumber},sort=${statusSort})}" th:text="#{home.status}"></a>
+            </th>
+
         </tr>
         </thead>
 
@@ -132,12 +163,18 @@
                 <a sec:authorize="hasRole('ROLE_USER')" th:href="@{/updateReport/{reportId}(reportId=${tempReport.id})}"
                    th:text="#{home.viewReport}"></a>
             </td>
-            <td th:text="${#dates.format(tempReport.reportDate, 'dd-MMMM-yyyy')}"
-                th:classappend="${tempReport.status.name}"></td>
             <td sec:authorize="hasRole('ROLE_ADMIN')" th:text="#{${tempReport.user.type.name}}"
                 th:classappend="${tempReport.status.name}"></td>
-            <td th:text="${#dates.format(tempReport.createdAt, 'dd-MMMM-yyyy HH:mm:ss')}"
+
+            <td th:text="${#dates.format(tempReport.reportDate, 'dd-MM-yyyy')}"
                 th:classappend="${tempReport.status.name}"></td>
+
+            <td th:text="${#dates.format(tempReport.createdAt, 'dd-MM-yyyy HH:mm:ss')}"
+                th:classappend="${tempReport.status.name}"></td>
+
+            <td th:text="${#dates.format(tempReport.lastModified, 'dd-MM-yyyy HH:mm:ss')}"
+                th:classappend="${tempReport.status.name}"></td>
+
             <td th:text="#{${tempReport.status.name}}"
                 th:classappend="${tempReport.status.name}"></td>
         </tr>
@@ -159,16 +196,18 @@
                     <th:block th:with="pages = (${page.totalPages} > 10 ? 10 : ${page.totalPages})">
                         <th:block th:each="item : ${#numbers.sequence(1, pages)}">
                             <li class="page-item" th:classappend="${item == pageable.pageNumber+1? 'active' : ''}">
-                                <a class="page-link" th:href="@{/(page=${item-1})}" th:text="${item}"></a>
+                                <a class="page-link" th:href="@{/(page=${item-1},sort=${sort})}" th:text="${item}"></a>
                             </li>
                         </th:block>
                     </th:block>
-                    <li class="page-item" th:classappend="${!page.hasNext() || pageable.pageNumber >= 9? 'disabled' : ''}">
-                        <a class="page-link" th:href="@{/(page=${pageable.pageNumber}+1)}" th:text="#{home.next}"></a>
-                    </li>
                     <li class="page-item disabled" th:if="${page.getTotalPages() > 5}">
                         <a class="page-link" href="#">...</a>
                     </li>
+                    <li class="page-item"
+                        th:classappend="${!page.hasNext() || pageable.pageNumber >= 9? 'disabled' : ''}">
+                        <a class="page-link" th:href="@{/(page=${pageable.pageNumber}+1)}" th:text="#{home.next}"></a>
+                    </li>
+
                 </ul>
             </nav>
         </div>

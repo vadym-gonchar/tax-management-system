@@ -23,11 +23,21 @@
 </head>
 
 <body>
+
+<div th:replace="fragments/navigation.html :: topBar"></div>
+
 <div class="container">
 
-    <div th:if="${reportNotBelong}" class="alert alert-success col-xs-offset-1 col-xs-10">
+    <div th:if="${reportNotBelong}" class="alert alert-alert col-xs-offset-1 col-xs-10">
         <span th:text="#{reportForm.reportNotBelong}"></span>
     </div>
+
+   <!-- <div th:if="${reportIsApproved}" class="alert alert-success col-xs-offset-1 col-xs-10">
+        <span th:text="#{${reportIsApproved}}"></span>
+    </div>-->
+
+
+
 
     <p class="h4 mt-4" th:object="${report}"
        th:text="#{reportForm.taxReport} + ' ' + #{${report.user.type.name}}">
@@ -43,13 +53,13 @@
 
         <input type="hidden" th:field="*{id}"/>
 
-        <h6 sec:authorize="hasRole('ROLE_USER')" th:if="${report.id == null || reportStatusPending || reportStatusRejected}"
+        <h6 sec:authorize="hasRole('ROLE_USER')" th:if="${report.id == null || (reportStatusPending != null && reportStatusPending) || (reportStatusRejected != null && reportStatusRejected)}"
             th:text="#{reportForm.reportDateLabel}" class="mb-2"></h6>
         <!-- Date picker -->
         <div style="margin-bottom: 15px; max-width:450px" class="input-group">
             <span class="input-group-addon"><i class="glyphicon glyphicon-user"></i></span>
 
-            <input data-date-format="dd/mm/yyyy" id="datepicker" type="text" class="form-control"
+            <input autocomplete="off" data-date-format="dd/mm/yyyy" id="datepicker" type="text" class="form-control"
                    th:value="${#dates.format(report.reportDate, 'dd/MM/yyyy')}"
                    th:unless="${readOnly}"
                    th:field="*{reportDate}"
@@ -69,7 +79,7 @@
             <div><p th:each="err : ${#fields.errors('reportDate')}" th:text="${err}"></p></div>
         </div>
 
-        <h6 sec:authorize="hasRole('ROLE_USER')" th:if="${report.id == null || reportStatusPending || reportStatusRejected}"
+        <h6 sec:authorize="hasRole('ROLE_USER')" th:if="${report.id == null || (reportStatusPending != null && reportStatusPending) || (reportStatusRejected != null && reportStatusRejected)}"
             th:text="#{reportForm.rateLabel}" class="mt-2"></h6>
         <!-- Add Rate -->
         <div style="margin-bottom: 15px; max-width:450px" class="input-group">
@@ -106,37 +116,36 @@
                 <p th:text="#{reportForm.label}"></p>
             </div>
             <div style="color:mediumseagreen">
-                <input checked type="radio" name="status" th:value="${approvedStatus.id}"
+                <input checked type="radio" th:field="*{status}" th:value="${approvedStatus.id}"
                        th:text=" ' ' + #{reportForm.approve}"/>
             </div>
             <br>
             <div style="color:orangered">
-                <input type="radio" name="status" th:value="${rejectedStatus.id}"
+                <input type="radio" th:field="*{status}" th:value="${rejectedStatus.id}"
                        th:text=" ' ' + #{reportForm.reject}"/>
             </div>
+        </div>
+        <br>
+        <div th:if="${statusFormError}" style="margin-bottom: 25px" class="text-danger">
+            <div><p th:text="#{${statusFormError}}"></p></div>
         </div>
 
         <p sec:authorize="hasRole('ROLE_ADMIN')" class="h6 mt-5 font-italic" th:text="#{reportForm.inspComnt}"></p>
         <p sec:authorize="hasRole('ROLE_USER')" class="h6 mt-5 font-italic" th:text="#{reportForm.userComnt}"></p>
 
         <span sec:authorize="hasRole('ROLE_USER')">
-            <!--<span th:text="${report.comment}"></span>-->
-
             <textarea rows="5" cols="53" th:field="*{comment}" readonly></textarea>
-
-            <!-- <textarea rows="5" cols="53" th:field="*{comment}"
-                       th:disabled="${reportStatusPending || reportStatusRejected || reportStatusApproved}"></textarea>-->
         </span>
         <span sec:authorize="hasRole('ROLE_ADMIN')">
             <textarea rows="5" cols="53" th:field="*{comment}"
                       th:disabled="${reportStatusApproved || reportStatusRejected}"></textarea>
         </span>
         <br/>
-        <button sec:authorize="hasRole('ROLE_ADMIN')" th:if="${report.id == null || reportStatusPending}"
+        <button sec:authorize="hasRole('ROLE_ADMIN')" th:if="${report.id == null || (reportStatusPending != null && reportStatusPending)}"
                 type="submit" class="btn btn-info col-2 mt-3" th:text="#{reportForm.submitReportButton}"></button>
 
         <button sec:authorize="hasRole('ROLE_USER')"
-                th:if="${report.id == null || reportStatusPending || reportStatusRejected}"
+                th:if="${report.id == null || (reportStatusPending != null && reportStatusPending) || (reportStatusRejected != null && reportStatusRejected)}"
                 type="submit" class="btn btn-info col-2 mt-3" th:text="#{reportForm.submitReportButton}"></button>
     </form>
 

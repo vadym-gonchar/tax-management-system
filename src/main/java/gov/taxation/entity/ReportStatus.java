@@ -1,13 +1,11 @@
 package gov.taxation.entity;
 
-import lombok.Getter;
-import lombok.Setter;
+import lombok.Data;
 
 import javax.persistence.*;
 
 @Entity(name = "report_statuses")
-@Getter
-@Setter
+@Data
 public class ReportStatus {
 
     @Id

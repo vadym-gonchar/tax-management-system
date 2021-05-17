@@ -1,14 +1,12 @@
 package gov.taxation.entity;
 
-import lombok.Getter;
-import lombok.Setter;
+import lombok.Data;
 
 import javax.persistence.*;
 import javax.validation.constraints.NotNull;
 
 @Entity(name = "user_types")
-@Getter
-@Setter
+@Data
 public class UserType {
 
     @Id

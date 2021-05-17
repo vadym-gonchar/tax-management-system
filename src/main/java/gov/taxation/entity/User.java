@@ -1,13 +1,11 @@
 package gov.taxation.entity;
 
-import lombok.Getter;
-import lombok.Setter;
+import lombok.Data;
 
 import javax.persistence.*;
 
 @Entity(name = "users")
-@Getter
-@Setter
+@Data
 public class User {
 
     @Id
@@ -30,11 +28,11 @@ public class User {
     @Column(name = "email")
     private String email;
 
-    @ManyToOne(fetch = FetchType.EAGER)
+    @ManyToOne
     @JoinColumn(name = "roles_id")
     private Role role;
 
-    @ManyToOne(fetch = FetchType.EAGER)
+    @ManyToOne
     @JoinColumn(name = "user_types_id")
     private UserType type;
 }

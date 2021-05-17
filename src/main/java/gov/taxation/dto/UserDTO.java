@@ -2,15 +2,13 @@ package gov.taxation.dto;
 
 import gov.taxation.validation.FieldMatch;
 import gov.taxation.validation.ValidEmail;
-import lombok.Getter;
-import lombok.Setter;
+import lombok.Data;
 
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
 
 @FieldMatch.List({@FieldMatch(first = "password", second = "matchingPassword", message = "{error.mismatch}")})
-@Getter
-@Setter
+@Data
 public class UserDTO {
 
     @NotNull

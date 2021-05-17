@@ -1,7 +1,6 @@
 package gov.taxation.entity;
 
-import lombok.Getter;
-import lombok.Setter;
+import lombok.Data;
 import org.springframework.format.annotation.DateTimeFormat;
 
 import javax.persistence.*;
@@ -12,8 +11,7 @@ import java.math.BigDecimal;
 import java.util.Date;
 
 @Entity(name = "reports")
-@Getter
-@Setter
+@Data
 public class Report {
 
     @Id
@@ -36,20 +34,29 @@ public class Report {
     @Column(name = "comment")
     private String comment;
 
-    @ManyToOne(fetch = FetchType.EAGER)
+    @ManyToOne
     @JoinColumn(name = "status_id")
     private ReportStatus status;
 
-    @Column(name = "created_at", updatable = false)
     @Temporal(TemporalType.TIMESTAMP)
+    @Column(name = "created_at", updatable = false)
     private Date createdAt;
 
-    @ManyToOne(fetch = FetchType.EAGER)
+    @Temporal(TemporalType.TIMESTAMP)
+    @Column(name = "last_modified")
+    private Date lastModified;
+
+    @ManyToOne
     @JoinColumn(name = "users_id")
     private User user;
 
     @PrePersist
-    public void setCurrentCreateDate() {
-        this.setCreatedAt(new Date());
+    public void onCreate() {
+        lastModified = createdAt = new Date();
+    }
+
+    @PreUpdate
+    public void onUpdate() {
+        lastModified = new Date();
     }
 }
