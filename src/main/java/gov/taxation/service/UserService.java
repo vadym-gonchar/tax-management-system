@@ -37,7 +37,6 @@ public class UserService implements UserDetailsService {
     @Autowired
     private BCryptPasswordEncoder passwordEncoder;
 
-    @Transactional
     public User findByUserName(String userName) {
         return userRepository.findByUserName(userName);
     }
@@ -45,13 +44,13 @@ public class UserService implements UserDetailsService {
     @Transactional
     public void createUser(UserDTO userDTO) {
 
-        User user = new User();
-
-        user.setUserName(userDTO.getUserName());
-        user.setPassword(passwordEncoder.encode(userDTO.getPassword()));
-        user.setFirstName(userDTO.getFirstName());
-        user.setLastName(userDTO.getLastName());
-        user.setEmail(userDTO.getEmail());
+        User user = User.builder()
+                .userName(userDTO.getUserName())
+                .password(passwordEncoder.encode(userDTO.getPassword()))
+                .firstName(userDTO.getFirstName())
+                .lastName(userDTO.getLastName())
+                .email(userDTO.getEmail())
+                .build();
 
         user.setRole(roleRepository.findRoleByName(RoleEnum.ROLE_USER.name()));
 
@@ -64,7 +63,6 @@ public class UserService implements UserDetailsService {
         userRepository.save(user);
     }
 
-    @Transactional
     public UserDetails loadUserByUsername(String userName) throws UsernameNotFoundException {
         User user = userRepository.findByUserName(userName);
         if (user == null) {

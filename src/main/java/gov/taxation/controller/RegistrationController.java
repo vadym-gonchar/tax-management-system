@@ -4,6 +4,8 @@ import gov.taxation.dto.UserDTO;
 import gov.taxation.entity.User;
 import gov.taxation.service.UserService;
 import gov.taxation.service.UserTypeService;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.propertyeditors.StringTrimmerEditor;
 import org.springframework.stereotype.Controller;
@@ -14,7 +16,6 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import javax.validation.Valid;
-import java.util.logging.Logger;
 
 @Controller
 @RequestMapping("/register")
@@ -26,7 +27,8 @@ public class RegistrationController {
     @Autowired
     private UserTypeService userTypeService;
 
-    private Logger logger = Logger.getLogger(getClass().getName());
+
+    private static final Logger LOG = LoggerFactory.getLogger(RegistrationController.class);
 
     @InitBinder
     public void initBinder(WebDataBinder dataBinder) {
@@ -53,10 +55,10 @@ public class RegistrationController {
 
         model.addAttribute("userTypes", userTypeService.findAll());
         String userName = userDTO.getUserName();
-        logger.info("Processing registration form for: " + userName);
+        LOG.info("Processing registration form for: " + userName);
 
         if (result.hasErrors()) {
-            logger.warning("Registration form error");
+            LOG.warn("Registration form error");
             return "registration";
         }
 
@@ -65,7 +67,7 @@ public class RegistrationController {
             model.addAttribute("userDTO", new UserDTO());
             model.addAttribute("registrationError", new UserDTO());
 
-            logger.warning("User name already exists.");
+            LOG.warn("Username already exists!");
 
             return "registration";
         }
@@ -73,7 +75,7 @@ public class RegistrationController {
         userService.createUser(userDTO);
         redirectAttributes.addFlashAttribute("accountSuccess", new UserDTO());
 
-        logger.info("Successfully created user: " + userName);
+        LOG.info("Successfully created user: " + userName);
 
         return "redirect:/login";
 

@@ -32,13 +32,6 @@
         <span th:text="#{reportForm.reportNotBelong}"></span>
     </div>
 
-   <!-- <div th:if="${reportIsApproved}" class="alert alert-success col-xs-offset-1 col-xs-10">
-        <span th:text="#{${reportIsApproved}}"></span>
-    </div>-->
-
-
-
-
     <p class="h4 mt-4" th:object="${report}"
        th:text="#{reportForm.taxReport} + ' ' + #{${report.user.type.name}}">
     </p>

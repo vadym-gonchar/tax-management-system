@@ -60,18 +60,18 @@ public class ReportController {
                                  RedirectAttributes redirectAttributes) {
 
         Optional<Report> reportOptional = reportService.findReportById(reportId);
-//address flash error message
+
         if (!reportOptional.isPresent()) {
-            redirectAttributes.addFlashAttribute("reportNotFound", "This report has not been found");
+            redirectAttributes.addFlashAttribute("reportNotFound", "error.reportNotFound");
             return this.createReportForm(null, model, session);
         }
 
         Report report = reportOptional.get();
 
         User user = (User) session.getAttribute("user");
-//address flash error message
+
         if (user.getRole().getName().equals(RoleEnum.ROLE_USER.name()) && !this.isReportBelongToUser(user, report)) {
-            redirectAttributes.addFlashAttribute("reportNotBelong", "This report is not the user's report");
+            redirectAttributes.addFlashAttribute("reportNotBelong", "reportForm.reportNotBelong");
             return this.createReportForm(null, model, session);
         }
 
@@ -101,7 +101,7 @@ public class ReportController {
         if (report.getId() != null) {
 
             Optional<Report> reportOptional = reportService.findReportById(report.getId());
-//address flash error message
+
             if (!reportOptional.isPresent()) {
                 redirectAttributes.addFlashAttribute("reportNotFound", "error.reportNotFound");
                 return this.createReportForm(null, model, session);
@@ -110,12 +110,12 @@ public class ReportController {
             Report existingReport = reportOptional.get();
 
             this.fillModel(report, model);
-//address flash error message
+
             if (!this.isReportBelongToUser(user, existingReport)) {
                 redirectAttributes.addFlashAttribute("reportNotBelong", "reportForm.reportNotBelong");
                 return this.createReportForm(null, model, session);
             }
-//address flash error message
+
             if (this.isReportApproved(existingReport)) {
                 redirectAttributes.addFlashAttribute("reportIsApproved", "success.reportIsApproved");
                 return this.viewReportForm(report.getId(), model, session, redirectAttributes);
@@ -172,14 +172,14 @@ public class ReportController {
                                      RedirectAttributes redirectAttributes) {
 
         Optional<Report> reportOptional = reportService.findReportById(report.getId());
-//address flash error message
+
         if (!reportOptional.isPresent()) {
             redirectAttributes.addFlashAttribute("reportNotFound", "error.reportNotFound");
             return this.createReportForm(null, model, session);
         }
 
         Report existingReport = reportOptional.get();
-//address flash error message
+
         if (this.isReportApproved(existingReport)) {
             redirectAttributes.addFlashAttribute("reportIsApproved", "success.reportIsApproved");
             return this.viewReportForm(report.getId(), model, session, redirectAttributes);

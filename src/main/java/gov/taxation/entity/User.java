@@ -1,11 +1,20 @@
 package gov.taxation.entity;
 
+import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 import javax.persistence.*;
 
+@Table(indexes = {
+        @Index(name = "firstLastIndex", columnList = "first_name, last_name")
+})
 @Entity(name = "users")
 @Data
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
 public class User {
 
     @Id
