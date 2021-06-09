@@ -202,7 +202,7 @@ public class ReportController {
         return this.viewReportForm(report.getId(), model, session, redirectAttributes);
     }
 
-    private boolean isReportApproved(final Report report) {
+    private boolean isReportApproved(Report report) {
         return report.getStatus().getName().equals(ReportStatusEnum.APPROVED.getName());
     }
 
@@ -210,7 +210,7 @@ public class ReportController {
         return user.getId().equals(report.getUser().getId());
     }
 
-    private void fillModel(final Report report, final Model model) {
+    private void fillModel(Report report, Model model) {
         model.addAttribute("report", report);
         model.addAttribute("reportStatusPending", report.getStatus().getName().equals(ReportStatusEnum.PENDING.getName()));
         model.addAttribute("reportStatusRejected", report.getStatus().getName().equals(ReportStatusEnum.REJECTED.getName()));

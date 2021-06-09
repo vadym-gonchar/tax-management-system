@@ -16,7 +16,7 @@ public class ReportSpecification {
      * @param name User firstName or lastName
      * @return predicate
      */
-    public static Specification<Report> hasUserName(final String name) {
+    public static Specification<Report> hasUserName(String name) {
 
         return new Specification<Report>() {
             @Override
@@ -30,7 +30,7 @@ public class ReportSpecification {
 
     }
 
-    public static Specification<Report> hasUser(final User user) {
+    public static Specification<Report> hasUser(User user) {
 
         return new Specification<Report>() {
             @Override
@@ -42,7 +42,7 @@ public class ReportSpecification {
 
     }
 
-    public static Specification<Report> hasUserType(final UserType userType) {
+    public static Specification<Report> hasUserType(UserType userType) {
 
         return new Specification<Report>() {
             @Override
@@ -58,7 +58,7 @@ public class ReportSpecification {
 
     }
 
-    public static Specification<Report> hasStatus(final ReportStatus status) {
+    public static Specification<Report> hasStatus(ReportStatus status) {
         return new Specification<Report>() {
             @Override
             public Predicate toPredicate(Root<Report> root, CriteriaQuery<?> query, CriteriaBuilder cb) {

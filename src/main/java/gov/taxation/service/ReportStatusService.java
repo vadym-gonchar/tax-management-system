@@ -23,7 +23,7 @@ public class ReportStatusService {
         return this.reportStatusRepository.findByName(reportStatusEnum.getName());
     }
 
-    public Optional<ReportStatus> findById(final ReportStatus reportStatus) {
+    public Optional<ReportStatus> findById(ReportStatus reportStatus) {
 
         if (reportStatus != null) {
             return this.reportStatusRepository.findById(reportStatus.getId());
